@@ -1,11 +1,12 @@
 import React from 'react';
 
 import { createLibraryController } from './libraryController';
+import { loopLibraryHttpApi } from '../../api/loopLibraryHttpApi';
 
 type SettingsShape = { libraryRoots: string[] };
 
 export function useLibraryViewModel() {
-  const controller = React.useMemo(() => createLibraryController(window.loopLibrary), []);
+  const controller = React.useMemo(() => createLibraryController(loopLibraryHttpApi), []);
 
   const [settings, setSettings] = React.useState<SettingsShape | null>(null);
   const [scanCount, setScanCount] = React.useState<number | null>(null);

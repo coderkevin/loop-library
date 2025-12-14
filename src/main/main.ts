@@ -1,81 +1,69 @@
 import { app, BrowserWindow } from 'electron';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { registerIpcHandlers } from './ipc.js';
+import { startServer, stopServer } from './server.js';
 
-const isDev = process.env.ELECTRON_DEV === 'true';
-const devServerUrl = process.env.VITE_DEV_SERVER_URL ?? 'http://localhost:5173/';
+type RunMode = 'browser' | 'electron';
+const runMode = (process.env.LOOP_LIBRARY_MODE ?? 'browser') as RunMode;
+const openDevTools = process.env.ELECTRON_DEVTOOLS === 'true';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-async function loadDevServer(win: BrowserWindow, attemptsLeft = 40): Promise<void> {
-  try {
-    await win.loadURL(devServerUrl);
-  } catch (err) {
-    if (attemptsLeft <= 0) {
-      throw err;
-    }
-    await new Promise((r) => setTimeout(r, 250));
-    return loadDevServer(win, attemptsLeft - 1);
-  }
-}
-
-function createWindow() {
-  if (isDev) {
-    console.log('[main] creating window (dev)');
-  }
+function createWindow(url: string) {
+  console.log('[main] creating window');
   const win = new BrowserWindow({
     width: 1024,
     height: 768,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      preload: path.join(__dirname, 'preload.cjs'),
     },
-  });
-
-  win.webContents.on('did-finish-load', () => {
-    console.log('[main] renderer did-finish-load');
-
-    // Sanity check: verify preload exposed API is visible in the main world.
-    void win.webContents
-      .executeJavaScript('window.loopLibrary?.ping?.()')
-      .then((result) => {
-        console.log('[main] window.loopLibrary.ping()', result ?? '(undefined)');
-      })
-      .catch((err) => {
-        console.error('[main] window.loopLibrary.ping() threw', err);
-      });
   });
 
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
     console.error('[main] renderer did-fail-load', { errorCode, errorDescription, validatedURL });
   });
 
-  if (isDev) {
-    void loadDevServer(win);
+  void win.loadURL(url);
+
+  if (openDevTools) {
     win.webContents.openDevTools({ mode: 'detach' });
-  } else {
-    win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
+
+  win.on('closed', () => {
+    if (runMode === 'electron') {
+      void stopServer().finally(() => {
+        app.quit();
+      });
+    }
+  });
 }
 
 app.whenReady().then(() => {
-  if (isDev) {
-    console.log('[main] app.whenReady()');
-  }
-  registerIpcHandlers();
-  createWindow();
+  console.log('[main] app.whenReady()');
+
+  const serverIsDev = runMode === 'browser';
+  void startServer({ isDev: serverIsDev }).then(({ url }) => {
+    console.log(`[main] API ready at ${url}`);
+
+    if (runMode === 'browser') {
+      console.log('[main] Open UI at http://localhost:5173');
+      return; // browser-dev mode: no Electron window
+    }
+    createWindow(url);
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      void startServer({ isDev: serverIsDev }).then(({ url }) => createWindow(url));
     }
   });
 });
 
 app.on('window-all-closed', () => {
+  if (runMode === 'electron') {
+    void stopServer().finally(() => {
+      app.quit();
+    });
+    return;
+  }
+
   if (process.platform !== 'darwin') {
     app.quit();
   }
