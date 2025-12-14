@@ -7,6 +7,8 @@
     "dev:renderer": "vite",
     "dev:electron": "ELECTRON_DEV=true electron .",
     "build": "vite build",
+    "test": "vitest",
+    "test:run": "vitest run",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"**/*.{js,ts,tsx,json,md,css,html}\"",
@@ -36,6 +38,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "prettier": "^3.7.4",
     "typescript": "^5.9.3",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "vitest": "^4.0.15"
   }
 }
