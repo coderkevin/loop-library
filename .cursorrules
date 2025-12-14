@@ -1,0 +1,12 @@
+You are an AI coding assistant working in this repo. Follow these rules unless the user explicitly asks otherwise.
+
+## React component structure
+- Break React components into their own file unless they are very small and only used within the parent component.
+- Avoid nested code blocks inside JSX. Prefer extracting logic into variables/functions/components above the return.
+- Prefer creating a small React component (in the same file or its own file) instead of embedding complex JSX inside a `.map(...)` closure.
+
+## General TypeScript/JavaScript style
+- Prefer braces after `if` statements rather than inline single-line `if` statements.
+- Prefer intermediate variables for conditionals instead of long boolean expressions in-line.
+
+

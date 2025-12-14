@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { registerIpcHandlers } from './ipc.js';
 
 const isDev = process.env.ELECTRON_DEV === 'true';
 const devServerUrl = process.env.VITE_DEV_SERVER_URL ?? 'http://localhost:5173/';
@@ -12,7 +13,9 @@ async function loadDevServer(win: BrowserWindow, attemptsLeft = 40): Promise<voi
   try {
     await win.loadURL(devServerUrl);
   } catch (err) {
-    if (attemptsLeft <= 0) throw err;
+    if (attemptsLeft <= 0) {
+      throw err;
+    }
     await new Promise((r) => setTimeout(r, 250));
     return loadDevServer(win, attemptsLeft - 1);
   }
@@ -62,13 +65,18 @@ app.whenReady().then(() => {
   if (isDev) {
     console.log('[main] app.whenReady()');
   }
+  registerIpcHandlers();
   createWindow();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });

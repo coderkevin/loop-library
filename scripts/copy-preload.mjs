@@ -4,7 +4,7 @@ import { cwd } from 'node:process';
 
 const projectRoot = cwd();
 const src = path.join(projectRoot, 'src', 'main', 'preload.cjs');
-const outDir = path.join(projectRoot, 'dist-electron');
+const outDir = path.join(projectRoot, 'dist-electron', 'main');
 const dest = path.join(outDir, 'preload.cjs');
 
 fs.mkdirSync(outDir, { recursive: true });
