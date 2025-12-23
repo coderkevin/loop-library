@@ -2,6 +2,7 @@ import React from 'react';
 
 import { createLibraryController } from './libraryController';
 import { loopLibraryHttpApi } from '../../api/loopLibraryHttpApi';
+import type { Track } from '../../../shared/types';
 
 type SettingsShape = { libraryRoots: string[] };
 
@@ -9,6 +10,7 @@ export function useLibraryViewModel() {
   const controller = React.useMemo(() => createLibraryController(loopLibraryHttpApi), []);
 
   const [settings, setSettings] = React.useState<SettingsShape | null>(null);
+  const [tracks, setTracks] = React.useState<Track[]>([]);
   const [scanCount, setScanCount] = React.useState<number | null>(null);
   const [scanPreview, setScanPreview] = React.useState<string[]>([]);
   const [busy, setBusy] = React.useState(false);
@@ -18,6 +20,11 @@ export function useLibraryViewModel() {
       .loadSettings()
       .then(setSettings)
       .catch(() => setSettings(null));
+
+    void controller
+      .listTracks()
+      .then(setTracks)
+      .catch(() => setTracks([]));
   }, [controller]);
 
   const addRoot = async () => {
@@ -48,6 +55,9 @@ export function useLibraryViewModel() {
       const res = await controller.scan();
       setScanCount(res.files.length);
       setScanPreview(res.files.slice(0, 10));
+
+      const updatedTracks = await controller.listTracks();
+      setTracks(updatedTracks);
     } finally {
       setBusy(false);
     }
@@ -56,6 +66,7 @@ export function useLibraryViewModel() {
   return {
     busy,
     settings,
+    tracks,
     scanCount,
     scanPreview,
     addRoot,

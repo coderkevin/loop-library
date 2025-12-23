@@ -1,15 +1,13 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { dialog } from 'electron';
-
-import { scanForAudioFiles } from './libraryScan.js';
-import { loadSettings, saveSettings } from './settings.js';
 import type { ApiDeps } from './api/types.js';
+import { scanForAudioFiles } from './libraryScan.js';
+import { buildTrackFromPath } from './library/indexTracks.js';
 import { createApp } from './server/createApp.js';
 import { createStartServer } from './server/startServer.js';
 import type { ServerHandle } from './server/startServer.js';
-import { buildTrackFromPath } from './library/indexTracks.js';
+import { loadSettings, saveSettings } from './settings.js';
 import {
   loadClipsStore,
   loadPreparedClipsStore,
@@ -21,11 +19,11 @@ import {
   saveTracksStore,
 } from './storage/stores.js';
 
-const HOST = '127.0.0.1';
-const PORT = 3123;
+const HOST = process.env.LOOP_LIBRARY_HOST ?? '127.0.0.1';
+const PORT = Number(process.env.LOOP_LIBRARY_PORT ?? '3123');
 
 function getProjectRootFromHere(): string {
-  // Compiled path: dist-electron/main/server.js
+  // Compiled path: dist-electron/main/prodServer.js
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   // dist-electron/main -> dist-electron -> projectRoot
@@ -62,12 +60,13 @@ const listen = async (
 
 const serverLifecycle = createStartServer({ host: HOST, port: PORT, listen });
 
-export async function startServer({ isDev }: { isDev: boolean }): Promise<{ url: string }> {
+async function main(): Promise<void> {
   const deps: ApiDeps = {
     loadSettings,
     saveSettings,
     scanForAudioFiles,
-    showOpenDirectoryDialog: () => dialog.showOpenDialog({ properties: ['openDirectory'] }),
+    // Server-only mode: no OS picker; callers can use "Add library root" with a path instead.
+    showOpenDirectoryDialog: async () => ({ canceled: true, filePaths: [] }),
     loadTracks: loadTracksStore,
     saveTracks: saveTracksStore,
     buildTrackFromPath,
@@ -80,10 +79,12 @@ export async function startServer({ isDev }: { isDev: boolean }): Promise<{ url:
   };
 
   const distDir = getDistDir();
-
-  return serverLifecycle.startServer({ createApp: () => createApp({ isDev, deps, distDir }) });
+  const { url } = await serverLifecycle.startServer({
+    createApp: () => createApp({ isDev: false, deps, distDir }),
+  });
+  console.log(`[prodServer] listening at ${url}`);
 }
 
-export async function stopServer(): Promise<void> {
-  await serverLifecycle.stopServer();
-}
+void main();
+
+

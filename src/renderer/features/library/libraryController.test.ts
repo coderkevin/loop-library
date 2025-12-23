@@ -12,6 +12,19 @@ describe('libraryController', () => {
       addLibraryRoot: vi.fn(async () => ({ libraryRoots: [] } satisfies Settings)),
       removeLibraryRoot: vi.fn(async () => ({ libraryRoots: [] } satisfies Settings)),
       scanLibrary: vi.fn(async () => ({ roots: [], files: [] } satisfies ScanResult)),
+      listTracks: vi.fn(async () => []),
+      listClips: vi.fn(async () => []),
+      createClip: vi.fn(async () => {
+        throw new Error('not needed in test');
+      }),
+      listSets: vi.fn(async () => []),
+      createSet: vi.fn(async () => {
+        throw new Error('not needed in test');
+      }),
+      pickSetExportDir: vi.fn(async () => ({ setId: 'x', exportDir: null })),
+      addClipToSet: vi.fn(async () => ({ setId: 'x', clipId: 'y' })),
+      removeClipFromSet: vi.fn(async () => ({ setId: 'x', clipId: 'y' })),
+      exportSet: vi.fn(async () => ({ exportDir: '/out', preparedClips: [] })),
     };
 
     const controller = createLibraryController(api);
@@ -28,6 +41,19 @@ describe('libraryController', () => {
       addLibraryRoot: vi.fn(async (root: string) => ({ libraryRoots: [root] } satisfies Settings)),
       removeLibraryRoot: vi.fn(async () => ({ libraryRoots: [] } satisfies Settings)),
       scanLibrary: vi.fn(async () => ({ roots: [], files: [] } satisfies ScanResult)),
+      listTracks: vi.fn(async () => []),
+      listClips: vi.fn(async () => []),
+      createClip: vi.fn(async () => {
+        throw new Error('not needed in test');
+      }),
+      listSets: vi.fn(async () => []),
+      createSet: vi.fn(async () => {
+        throw new Error('not needed in test');
+      }),
+      pickSetExportDir: vi.fn(async () => ({ setId: 'x', exportDir: null })),
+      addClipToSet: vi.fn(async () => ({ setId: 'x', clipId: 'y' })),
+      removeClipFromSet: vi.fn(async () => ({ setId: 'x', clipId: 'y' })),
+      exportSet: vi.fn(async () => ({ exportDir: '/out', preparedClips: [] })),
     };
 
     const controller = createLibraryController(api);

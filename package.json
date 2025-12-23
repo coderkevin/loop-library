@@ -10,6 +10,7 @@
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
     "build": "npm run build:renderer && npm run build:main",
+    "start:prod:server": "node dist-electron/main/prodServer.js",
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
@@ -25,6 +26,7 @@
     "cors": "^2.8.5",
     "electron": "^39.2.7",
     "express": "^5.2.1",
+    "music-metadata": "^11.10.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
